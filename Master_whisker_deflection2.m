@@ -60,6 +60,19 @@ else
 end
 
 %% Run DAQ
+% connect to arduino
+ard=serial('COM7','BaudRate',9600);
+fopen(ard);
+readData=fscanf(ard) %reads "A"
+flushinput(ard);fprintf(ard,'%s\n','fff','sync');
+reading_stims={};
+for k=1:200
+    reading_stims{k} = fgetl(ard)
+end
+fprintf(ard,'%s\n','1','sync');%readData=fscanf(ard)
+ExpStruct.InitialStimList = reading_stims;
+
+%% and loop
 while  i>0; %run forever
 disp(['waiting for trigger to start trial ' num2str(i)]);    
 
@@ -69,14 +82,15 @@ dataIn = s.startForeground;   %run a sweep
 
 ExpStruct.outputs{i} = downsample(outputSignal,10); 
 
-[ExpStruct outputSignal] = closeLoopMaster(dataIn,ExpStruct,myUDP,HoloSocket,defaultOutputSignal,eomOffset,i);
-
-displayTriggers(outputSignal,i);
-
+[ExpStruct outputSignal] = closeLoopMaster_whisker_deflection(dataIn,ExpStruct,myUDP,HoloSocket,defaultOutputSignal,eomOffset,i);
+the_stim = fgetl(ard);
+disp(['Serial read ' the_stim]);
+%displayTriggers(outputSignal,i);
+ExpStruct.SerialStimDat(i) = str2double(the_stim);
 save([savePath ExperimentName],'ExpStruct');
 disp('saved!');
 %send ready to go trigger back to arduino
-sendReadyTrigger(k,25);
+%sendReadyTrigger(k,25);
 
 i = i + 1;  %incriment trial number
 

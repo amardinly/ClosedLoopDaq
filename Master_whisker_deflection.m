@@ -60,6 +60,13 @@ else
 end
 
 %% Run DAQ
+% connect to arduino
+ard=serial('COM7','BaudRate',9600);
+fopen(ard);
+readData=fscanf(ard) %reads "A"
+flushinput(ard);fprintf(ard,'%s\n','fff','sync');
+fprintf(ard,'%s\n','1','sync');readData=fscanf(ard)
+
 while  i>0; %run forever
 disp(['waiting for trigger to start trial ' num2str(i)]);    
 

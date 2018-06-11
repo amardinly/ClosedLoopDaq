@@ -17,5 +17,5 @@ holoRequest.rois=listOfPossibleHolos;
 holoRequest.Sequence = {convertedSequence};
 
 %save to server
-save([loc.HoloRequest 'holoRequest.mat'],'holoRequest');
-save([loc.HoloRequest_DAQ 'holoRequest.mat'],'holoRequest');
+%save([loc.HoloRequest 'holoRequest.mat'],'holoRequest');
+%save([loc.HoloRequest_DAQ 'holoRequest.mat'],'holoRequest');
