@@ -1,5 +1,6 @@
-function sendReadyTrigger(s,iter);
-for U = 1:iter;
+function sendReadyTrigger(s,p_sec);
+
+
 outputSingleScan(s,[1])
-end
+pause(p_sec);
 outputSingleScan(s,[0])

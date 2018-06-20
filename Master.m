@@ -1,6 +1,11 @@
 clear all; close all force; clc;
+
+ExpStruct.mouseID = input('please enter mouse ID: ','s');
+ExpStruct.notes = input('please enter relevant info: ' ,'s');
+
+
 rmpath(genpath('C:\Users\MOM2\Documents\MATLAB\'));
-rmpath(genpath('C:\Users\MOM2\Documents\MATLAB\'));
+rmpath(genpath('C:\Users\MOM2\Documents\GitHub\'));
 addpath(genpath('C:\Users\MOM2\Documents\GitHub\msocket'));
 addpath(genpath('C:\Users\MOM2\Documents\GitHub\ClosedLoopDaq\'));
 
@@ -33,6 +38,7 @@ savePath = 'C:\alan\';
 
 %initialize UDP camera trigger
 try; echoudp('on',55000); catch; disp('error initializing UDP - if already running, ignore');  end;
+try; fclose(myUDP); end;
 myUDP = udp('128.32.173.99',55000);
 fopen(myUDP);
 
@@ -71,12 +77,12 @@ ExpStruct.outputs{i} = downsample(outputSignal,10);
 
 [ExpStruct outputSignal] = closeLoopMaster(dataIn,ExpStruct,myUDP,HoloSocket,defaultOutputSignal,eomOffset,i);
 
-displayTriggers(outputSignal,i);
+% displayTriggers(outputSignal,i);
 
 save([savePath ExperimentName],'ExpStruct');
 disp('saved!');
 %send ready to go trigger back to arduino
-sendReadyTrigger(k,25);
+sendReadyTrigger(k,.05);
 
 i = i + 1;  %incriment trial number
 

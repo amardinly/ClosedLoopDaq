@@ -4,6 +4,12 @@ persistent holoRequest LaserPower
 
 tic
 OutputSignal=defaultOutputSignal;
+%load HoloRequest once, on the first  run
+if isempty(holoRequest);
+    loc=FrankenScopeRigFile;
+    load([loc.HoloRequest 'holoRequest.mat'],'holoRequest');
+    load(loc.PowerCalib,'LaserPower');
+end
 
 %send UDP trigger to Camera to save frames and open next file
 fwrite(myUDP,num2str(i+1));
@@ -13,22 +19,36 @@ disp('UDP signal sent to camera');
 loadPath = 'X:\holography\Data\Alan\DataTransferNode\';
 newDataDir = dir(loadPath);
 
-if numel(newDataDir)== 3;
-    load([loadPath newDataDir(3).name]);  %load new calcium data
-    delete([loadPath newDataDir(3).name]); %delete old calcium data
-    dataFlag = true;                       %flag new data
-    
-    ExpStruct.dFF(i,:)=dff;
-    clear dff;
-    disp('Calcium data grabbed from SI');
-else
-    dataFlag = false;
-    try
-    ExpStruct.dFF(i,:) = nan(size(ExpStruct.dFF,2));  %nans cause we dont have infor for this trial
-    disp('no data from SI this time');
-    end
-end
 
+if i == 1;
+    ExpStruct.dFF(i,:) = nan(1,numel(holoRequest.rois));
+else
+%     if numel(newDataDir)== 3;
+%         load([loadPath newDataDir(3).name]);  %load new calcium data
+%         delete([loadPath newDataDir(3).name]); %delete old calcium data
+%         dataFlag = true;                       %flag new data
+%         
+%         ExpStruct.dFF(i,:)=dff;
+%         clear dff;
+%         disp('YES SI DATA');
+%     else
+%         dataFlag = false;
+%         
+%         ExpStruct.dFF(i,:) = nan(1,size(ExpStruct.dFF,2));  %nans cause we dont have infor for this trial
+%         disp('NO SI DATA');
+%         
+%     end
+   while numel(newDataDir)~=3;
+       pause(0.05);
+   end
+        load([loadPath newDataDir(3).name]);  %load new calcium data
+        delete([loadPath newDataDir(3).name]); %delete old calcium data
+        dataFlag = true;                       %flag new data
+        
+        ExpStruct.dFF(i,:)=dff;
+        clear dff;
+        disp('YES SI DATA');
+end
 
 %analyze sweeps{thisTrial}(1,:) for analog data, and we'll see about
 %digital data.  remember to undo the delta from CC
@@ -70,12 +90,6 @@ DE_list = [ 1 1 1 1 1 1 1];
 ExpStruct.stimParams{i}=StimParams;
 ExpStruct.neuronsToShoot{i}=neuronsToShoot;
 
-%load HoloRequest once, on the first  run
-if isempty(holoRequest);
-    loc=FrankenScopeRigFile;
-    load([loc.HoloRequest 'holoRequest.mat'],'holoRequest');
-    load(loc.PowerCalib,'LaserPower');
-end
 
 %if we're going to make new holograms
 if ~isnan(neuronsToShoot);
