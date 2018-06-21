@@ -6,6 +6,10 @@ useSockets = 0;
 ExpStruct.StimVoltages = [0,55,100,160,200,230,255]
 
 
+useSockets = 0;
+ExpStruct.StimVoltages = [0,55,100,160,200,230,255]
+
+
 ExpStruct.mouseID = input('please enter mouse ID: ','s');
 ExpStruct.notes = input('please enter relevant info: ' ,'s');
 

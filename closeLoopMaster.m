@@ -59,7 +59,10 @@ else
     ExpStruct.dFF(i,:)=dff;
     clear dff;
     disp('LOADED CALCIUM DATA');
+<<<<<<< HEAD
 end
+=======
+>>>>>>> a5f7c7081bfc29c9abd1a927540da9d6c677d225
 end
 %analyze sweeps{thisTrial}(1,:) for analog data, and we'll see about
 %digital data.  remember to undo the delta from CC
