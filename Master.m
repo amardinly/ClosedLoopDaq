@@ -1,5 +1,9 @@
 clear all; close all force; clc;
 
+useSockets = 0;
+ExpStruct.StimVoltages = [0,55,100,160,200,230,255]
+
+
 ExpStruct.mouseID = input('please enter mouse ID: ','s');
 ExpStruct.notes = input('please enter relevant info: ' ,'s');
 
@@ -9,7 +13,6 @@ rmpath(genpath('C:\Users\MOM2\Documents\GitHub\'));
 addpath(genpath('C:\Users\MOM2\Documents\GitHub\msocket'));
 addpath(genpath('C:\Users\MOM2\Documents\GitHub\ClosedLoopDaq\'));
 
-useSockets = 0;
 
 %using matlab data acquisition toolbox, set up daq and connection
 s = daq.createSession('ni'); %ni is company name
@@ -80,7 +83,8 @@ ExpStruct.outputs{i} = downsample(outputSignal,10);
 % displayTriggers(outputSignal,i);
 
 save([savePath ExperimentName],'ExpStruct');
-disp('saved!');
+
+% disp('saved!');
 %send ready to go trigger back to arduino
 sendReadyTrigger(k,.05);
 
