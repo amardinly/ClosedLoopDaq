@@ -2,6 +2,10 @@ clear all; close all force; clc;
 useSockets = 0;
 ExpStruct.getSIdata = 0;
 
+useSockets = 0;
+ExpStruct.StimVoltages = [0,55,100,160,200,230,255]
+
+
 ExpStruct.mouseID = input('please enter mouse ID: ','s');
 ExpStruct.notes = input('please enter relevant info: ' ,'s');
 
@@ -81,7 +85,8 @@ ExpStruct.outputs{i} = downsample(outputSignal,10);
 % displayTriggers(outputSignal,i);
 
 save([savePath ExperimentName],'ExpStruct');
-disp('saved!');
+
+% disp('saved!');
 %send ready to go trigger back to arduino
 sendReadyTrigger(k,.05);
 
