@@ -1,6 +1,6 @@
 clear all; close all force; clc;
 useSockets = 0;
-ExpStruct.getSIdata = 0;
+getSIData = 0;
 
 ExpStruct.mouseID = input('please enter mouse ID: ','s');
 ExpStruct.notes = input('please enter relevant info: ' ,'s');

@@ -19,7 +19,7 @@ disp('UDP signal sent to camera');
 loadPath = 'X:\holography\Data\Alan\DataTransferNode\';
 newDataDir = dir(loadPath);
 
-
+if ExpStruct.getSIdata;
 if i == 1;
     ExpStruct.dFF(i,:) = nan(1,numel(holoRequest.rois));
 else
@@ -49,7 +49,7 @@ else
         clear dff;
         disp('YES SI DATA');
 end
-
+end
 %analyze sweeps{thisTrial}(1,:) for analog data, and we'll see about
 %digital data.  remember to undo the delta from CC
 
