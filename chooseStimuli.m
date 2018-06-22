@@ -94,13 +94,9 @@ end
 
 
 
-function targetEnsemble = chooseTargetEnsemble(ExpStruct,threshold,flag);
-if nargin<3;
-    flag = 'stim';
-elseif nargin<2;
-    flag = 'stim';
+function targetEnsemble = chooseTargetEnsemble(ExpStruct);
+      flag = 'stim';
     threshold = 90;
-end
 
 
 
@@ -109,7 +105,7 @@ stimData=[nan ExpStruct.StimulusData];
 stimData(end)=[];
 
 clear AUC;
-goTrials  = find(stimData == V(T)); 
+goTrials  = find(stimData == max(stimData)); 
 catchTrails = find(stimData == 0);
 
 tic;

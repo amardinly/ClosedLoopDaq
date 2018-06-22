@@ -20,7 +20,7 @@ disp('UDP signal sent to camera');
 
 %1) grab calcium data
 loadPath = 'X:\holography\Data\Alan\DataTransferNode\';
-newDataDir = dir([loadPath '*mat']);
+newDataDir = dir(loadPath);
 
 
 if ExpStruct.getSIdata;
@@ -47,14 +47,13 @@ if ExpStruct.getSIdata;
         %     end
         
         %wait for calcium data...
-        while isempty(newDataDir);
+        while numel(newDataDir)~=3;
             pause(0.05);
-            newDataDir = dir([loadPath '*mat']);
         end
         
         
-        load([loadPath newDataDir(1).name]);  %load new calcium data
-        delete([loadPath newDataDir(1).name]); %delete old calcium data
+        load([loadPath newDataDir(3).name]);  %load new calcium data
+        delete([loadPath newDataDir(3).name]); %delete old calcium data
         dataFlag = true;                       %flag new data
         
         ExpStruct.dFF(i,:)=dff;
@@ -64,7 +63,7 @@ if ExpStruct.getSIdata;
 end
 %analyze sweeps{thisTrial}(1,:) for analog data, and we'll see about
 %digital data.  remember to undo the delta from CC
-%assignin('base','dataIn',dataIn)
+assignin('base','dataIn')
 
 %2) grab stimulus data
 offset = mean(dataIn(3000:4000,1));
@@ -86,14 +85,11 @@ ExpStruct.BehaviorOutcomes(i) = indx;
 %disp(['last trial was a type ' num2str(indx)]);
 %disp(['next trial the stim will be ' num2str(nextTrialStimData)]);
 
-ExpStruct.dataIn{i}=dataIn;
 %% science happens here
-if ExpStruct.getSIdata;
-[neuronsToShoot StimParams ExpStruct]=chooseStimuli(ExpStruct,i);
+
+[neuronsToShoot StimParams ExpStruct]=chooseStimuli(ExpStruct);
 %disp('close loop analysis function completed.  We have stimulation parameters');
-else
-    debugFlag = 1;
-end
+
 
 %debug only
 if debugFlag;
