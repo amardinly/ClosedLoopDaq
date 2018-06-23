@@ -70,11 +70,10 @@ if i + 1 > baselineTrials;
     nextStimValue = ExpStruct.StimulusData(i);
     stimsOfThisValue=find(ExpStruct.StimulusData==nextStimValue);
     stimsOfThisValue(end)=[];  %dont consider next trial, since i havent decided to stim or not yet.
-    stimsOfThisValue(stimsOfThisValue<baselineTrials)=[];
     fractionOpto =  mean(ExpStruct.manipulationLog(stimsOfThisValue+1));
     
     %if we've stimulated on too many trials, dont stimulate!
-    if fractionOpto*100 >= pcnt_manipulation || isnan(fractionOpto);
+    if fractionOpto >= pcnt_manipulation;
         neuronsToShoot = nan;
         ExpStruct.manipulationLog(i+1) = 0;
         StimParamsOut=makeBlankStim;
