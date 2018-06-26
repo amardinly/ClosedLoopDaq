@@ -137,11 +137,11 @@ switch sensitivity;
     goTrials  = find(stimData == max(stimData));
     case 'min'
     
-    goTrials  = find(stimData == B(2));
+%    goTrials  = find(stimData == max(stimData));
     
     case 'mid'
         
-    goTrials  = find(stimData == B(round(numel(B))/2));
+  %       goTrials  = find(stimData == max(stimData));
    
         
 end

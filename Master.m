@@ -4,6 +4,14 @@ useSockets = 1;
 ExpStruct.getSIdata =1;
 ExpStruct.StimVoltages = [0,60,100,130,160,190,220,250];
 
+ExpStruct.ensembleSelectParams.flag='stim'; %'catch','nonSelective'
+ExpStruct.ensembleSelectParams.threshold=.8;
+ExpStruct.ensembleSelectParams.maxCells=40;
+ExpStruct.ensembleSelectParams.sensitivity='max';  %'min','mid'
+
+
+
+
 
 ExpStruct.mouseID = input('please enter mouse ID: ','s');
 ExpStruct.notes = input('please enter relevant info: ' ,'s');
