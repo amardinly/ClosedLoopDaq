@@ -115,14 +115,20 @@ ExpStruct.neuronsToShoot{i}=neuronsToShoot;
 %if we're going to make new holograms
 if ~isnan(neuronsToShoot);
     
-  
+    %check and see if we've shot these neurons before
+    for W = 1:numel(ExpStruct.neuronsToShoot)-1;
+        checkVal(W) = min(ExpStruct.neuronsToShoot{W}==neuronsToShoot);
+        if ExpStruct.neuronsToShoot
+    end
+    
+    if max(checkVal)==1;
+    else
     
     %remove DE
     DE_list = [];  %reset DE list
     
     %new holorequest!
     theListofHolos = num2str(neuronsToShoot); %change to string
-    theListofHolos = ['[' theListofHolos ']'];
     rois=HI3Parse(theListofHolos);
     [listOfPossibleHolos convertedSequence] = convertSequence(rois);
     
@@ -141,7 +147,7 @@ if ~isnan(neuronsToShoot);
     
     
     ExpStruct.DE{i}=DE_list;
-    
+    end
     
     %% Maker Stimulation Triggers
     

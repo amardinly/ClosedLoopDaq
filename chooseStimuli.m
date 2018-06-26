@@ -164,5 +164,9 @@ switch flag
         
 end
 
+if targetEnsemble>40;
+    targetEnsemble=targetEnsemble(1:40);
+end
+
 
 
