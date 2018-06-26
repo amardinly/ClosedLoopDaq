@@ -3,7 +3,8 @@ function [ExpStruct OutputSignal] = closeLoopMaster(dataIn,ExpStruct,myUDP,HoloS
 persistent holoRequest LaserPower
 tic
 
-debugFlag =0;
+debugFlag = 0;
+
 
 OutputSignal=defaultOutputSignal;
 
