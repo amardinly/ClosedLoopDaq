@@ -1,4 +1,4 @@
-function [ExpStruct OutputSignal neuronsToShoot] = postHocTest(ExpStruct,ExpStruct2,OS,i);
+function [ExpStruct2 OutputSignal neuronsToShoot] = postHocTest(ExpStruct,ExpStruct2,OS,i);
 %% Close Loop master function
 persistent holoRequest LaserPower
 tic
@@ -21,10 +21,9 @@ ExpStruct2.BehaviorOutcomes(i) = ExpStruct.BehaviorOutcomes(i);
 ExpStruct2.dataIn{i}=ExpStruct.dataIn{i};
 
 %% science happens here
-[neuronsToShoot StimParams ExpStruct]=chooseStimuli(ExpStruct2,i);
-
+ [neuronsToShoot StimParams ExpStruct2]=chooseStimuli(ExpStruct2,i);
 %debug only
-if debugFlag;
+ if debugFlag;
     neuronsToShoot =nan;  %
     StimParams.pulseDuration=5; %ms
     StimParams.stimFreq=30; %hz
@@ -33,7 +32,7 @@ if debugFlag;
     StimParams.startTime=500; %ms;
     StimParams.pulseNumber=6 ;%10 18
     DE_list = [ 1 1 1 1 1 1 1];
-end;
+ end;
 %
 
 ExpStruct2.stimParams{i}=StimParams;
@@ -47,6 +46,7 @@ if ~isnan(neuronsToShoot);
     
     %new holorequest!
     theListofHolos = num2str(neuronsToShoot); %change to string
+    theListofHolos = ['[' theListofHolos ']'];
     rois=HI3Parse(theListofHolos);
     [listOfPossibleHolos convertedSequence] = convertSequence(rois);
     

@@ -1,0 +1,16 @@
+clear
+clc
+load('X:\holography\Data\Alan\180622_C.mat')
+ExpStruct2 =[];
+
+ExpStruct2.ensembleSelectParams.stimFlag ={'stim','catch','nonSelective'};
+ExpStruct2.ensembleSelectParams.threshold=.8;
+ExpStruct2.ensembleSelectParams.maxCells=40;
+ExpStruct2.ensembleSelectParams.sensitivity='max';  %'min','mid'
+
+MAKE ARBITRARY BL sweep
+
+OS = function_load_default_Trigger(-.15);
+for i = 1:500;
+    ExpStruct2 = postHocTest(ExpStruct,ExpStruct2,OS,i);
+end

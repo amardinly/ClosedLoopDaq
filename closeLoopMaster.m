@@ -5,6 +5,8 @@ tic
 
 debugFlag = 0;
 
+%remove DE
+ExpStruct.DE_list = [];  %reset DE list
 
 OutputSignal=defaultOutputSignal;
 
@@ -13,6 +15,7 @@ if isempty(holoRequest);
     loc=FrankenScopeRigFile;
     load([loc.HoloRequest 'holoRequest.mat'],'holoRequest');
     load(loc.PowerCalib,'LaserPower');
+    ExpStruct.holoRequest = holoRequest;
 end
 
 %send UDP trigger to Camera to save frames and open next file
@@ -118,41 +121,47 @@ ExpStruct.neuronsToShoot{i}=neuronsToShoot;
 
 
 %if we're going to make new holograms
-if ~isnan(neuronsToShoot);
-    
-  
-    
-    %remove DE
-    DE_list = [];  %reset DE list
-    
-    %new holorequest!
-    theListofHolos = num2str(neuronsToShoot); %change to string
-    theListofHolos = ['[' theListofHolos ']'];
-    rois=HI3Parse(theListofHolos);
-    [listOfPossibleHolos convertedSequence] = convertSequence(rois);
-    
-    holoRequest.rois     =  listOfPossibleHolos;
-    holoRequest.Sequence = {convertedSequence};
-    
-    %send new holorequest to hologram computer
-    mssend(HoloSocket,holoRequest);
-    
-    disp('Sent New Hologram Command - waiting on DE list');
-    
-    while isempty(DE_list);
-        DE_list=msrecv(HoloSocket);
+if ~isnan(neuronsToShoot);  
+    if isempty(ExpStruct.DE_list); %if we havent computer holograms yet.
+        %new holorequest!
+        theListofHolos=[];
+        for jjv = 1:numel(ExpStruct.targetEnsembles);
+            
+            theListofHolosA = num2str(ExpStruct.targetEnsembles{jjv}); %change to string
+            theListofHolos = [theListofHolos '[' theListofHolosA '],'];
+            
+            
+        end
+        theListofHolos(end)=[];  %delete the comma
+        rois=HI3Parse(theListofHolos);
+        [listOfPossibleHolos convertedSequence] = convertSequence(rois);
+        
+        
+        holoRequest.rois     =  listOfPossibleHolos;
+        holoRequest.Sequence = {convertedSequence};
+        
+        %send new holorequest to hologram computer
+        mssend(HoloSocket,holoRequest);
+        
+        disp('Sent New Hologram Command - waiting on DE list');
+        
+        while isempty(DE_list);
+            DE_list=msrecv(HoloSocket);
+        end
+        disp('Got DE_list, now making triggers');
+        
+        
+        ExpStruct.DE_list=DE_list;
     end
-    disp('Got DE_list, now making triggers');
-    
-    
-    ExpStruct.DE{i}=DE_list;
-    
     
     %% Maker Stimulation Triggers
     
-    thisTarget=holoRequest.Sequence{1}(1);
+    thisTarget=holoRequest.Sequence{1}(neuronsToShoot);
+        
     targets=holoRequest.rois{thisTarget};
+    
     LaserOutput=zeros(size(defaultOutputSignal,1),1);
+    
     NextHoloOutput = LaserOutput; % zeros
   
     % based on next stimulus and stimulus history, make Laser EOM and holo triggers for stimulus
@@ -160,11 +169,13 @@ if ~isnan(neuronsToShoot);
         PowerRequest = (StimParams.avgPower*numel(targets))/DE_list(thisTarget);
         Volt = function_EOMVoltage(LaserPower.EOMVoltage,LaserPower.PowerOutputTF,PowerRequest);
         Q=makepulseoutputs(StimParams.startTime,StimParams.pulseNumber,StimParams.pulseDuration,Volt,StimParams.stimFreq,20000,size(LaserOutput,1)/20000);
-        R=makepulseoutputs(StimParams.startTime-10,1,StimParams.pulseDuration,1,StimParams.stimFreq,20000,size(LaserOutput,1)/20000);
         LaserOutput=LaserOutput+Q;
-        NextHoloOutput=NextHoloOutput+R;
         StimParams.startTime=StimParams.startTime+StimParams.unitLength;
     end
+    
+    NextHoloOutput=makepulseoutputs(StimParams.startTime-10,neuronsToShoot,2,1,50,20000,size(LaserOutput,1)/20000);
+    
+
     
     LaserOutput(LaserOutput==0)=eomOffset;  %apply offset
     OutputSignal(:,1) = LaserOutput;
