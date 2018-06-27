@@ -4,23 +4,15 @@ useSockets = 0;
 ExpStruct.getSIdata =1;
 ExpStruct.StimVoltages = [0,60,100,130,160,190,220,250];
 
-%the ensembles that we're going to stimulate
-ExpStruct.ensembleSelectParams.stimFlag ={'stim','catch','nonSelective'}; %'stim' 'catch' 'nonSelective'
-ExpStruct.ensembleSelectParams.threshold=.8;
-ExpStruct.ensembleSelectParams.minthreshold=.35;
+%the ensembles that we're going to stimul
+ExpStruct.ensembleSelectParams.stimFlag ={'stim','catch','nonSelective'};
 
+ExpStruct.ensembleSelectParams.threshold=.8;
 ExpStruct.ensembleSelectParams.maxCells=40;
 ExpStruct.ensembleSelectParams.sensitivity='max';  %'min','mid'
 
-ExpStruct.targeting_Defaults.baseLineSweeps=50;  %sweeps we run before defining ensembles
-ExpStruct.targeting_Defaults.pcnt_manipulation=10;  %PCNT OF ALL TRIALS FOR EACH ENSEMBLE (e.g. 30% x 3 ensembles = OPTO 90% of the time!)
-        
-ExpStruct.StimParams.pulseDuration= 100; %ms
-ExpStruct.StimParams.stimFreq= 1; %hz
-ExpStruct.StimParams.avgPower = .05; %W  0.05 0.1 0.15 0.2
-ExpStruct.StimParams.unitLength= 200; %ms
-ExpStruct.StimParams.startTime=100; %ms;
-ExpStruct.StimParams.pulseNumber=1 ;%10 18       
+
+
 
 
 ExpStruct.mouseID = input('please enter mouse ID: ','s');
