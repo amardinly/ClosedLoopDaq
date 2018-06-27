@@ -58,7 +58,11 @@ if ExpStruct.getSIdata;
         delete([loadPath newDataDir(1).name]); %delete old calcium data
         dataFlag = true;                       %flag new data
         
+        try
         ExpStruct.dFF(i,:)=dff;
+        catch
+                ExpStruct.dFF(i,:)=dff';
+        end
         clear dff;
         disp('LOADED CALCIUM DATA');
     end

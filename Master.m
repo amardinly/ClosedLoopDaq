@@ -1,7 +1,7 @@
 clear all; close all force; clc;
 
 useSockets = 0;
-ExpStruct.getSIdata =1;
+ExpStruct.getSIdata =0;
 ExpStruct.StimVoltages = [0,60,100,130,160,190,220,250];
 
 ExpStruct.ensembleSelectParams.flag='stim'; %'catch','nonSelective'
