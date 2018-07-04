@@ -4,9 +4,10 @@ persistent holoRequest LaserPower
 tic
 
 debugFlag = 0;
+debugSLM = 1;
+
 
 %remove DE
-ExpStruct.DE_list = [];  %reset DE list
 
 OutputSignal=defaultOutputSignal;
 
@@ -28,46 +29,62 @@ newDataDir = dir([loadPath '*mat']);
 
 
 if ExpStruct.getSIdata;
-    if i == 1;
-        
-        ExpStruct.dFF(i,:) = nan(1,numel(holoRequest.rois));
-        
+    if debugSLM == 1
+        ExpStruct.dFF(i,:) = randi(300, 1, 400);
     else
-        
-        %     if numel(newDataDir)== 3;
-        %         load([loadPath newDataDir(3).name]);  %load new calcium data
-        %         delete([loadPath newDataDir(3).name]); %delete old calcium data
-        %         dataFlag = true;                       %flag new data
-        %
-        %         ExpStruct.dFF(i,:)=dff;
-        %         clear dff;
-        %         disp('YES SI DATA');
-        %     else
-        %         dataFlag = false;
-        %
-        %         ExpStruct.dFF(i,:) = nan(1,size(ExpStruct.dFF,2));  %nans cause we dont have infor for this trial
-        %         disp('NO SI DATA');
-        %
-        %     end
-        
-        %wait for calcium data...
-        while isempty(newDataDir);
-            pause(0.05);
-            newDataDir = dir([loadPath '*mat']);
+        if i == 1;
+
+            ExpStruct.dFF(i,:) = nan(1,numel(holoRequest.rois));
+
+        else
+            %     if numel(newDataDir)== 3;
+            %         load([loadPath newDataDir(3).name]);  %load new calcium data
+            %         delete([loadPath newDataDir(3).name]); %delete old calcium data
+            %         dataFlag = true;                       %flag new data
+            %
+            %         ExpStruct.dFF(i,:)=dff;
+            %         clear dff;
+            %         disp('YES SI DATA');
+            %     else
+            %         dataFlag = false;
+            %
+            %         ExpStruct.dFF(i,:) = nan(1,size(ExpStruct.dFF,2));  %nans cause we dont have infor for this trial
+            %         disp('NO SI DATA');
+            %
+            %     end
+
+            %wait for calcium data...
+            while isempty(newDataDir);
+                pause(0.05);
+                newDataDir = dir([loadPath '*mat']);
+            end
+
+            try
+            load([loadPath newDataDir(1).name]);  %load new calcium data
+            catch
+              FUCK = 1;
+              while FUCK == 1;
+                  pause(0.01);
+                  try
+                  load([loadPath newDataDir(1).name]);  %load new calcium data
+                  FUCK = 2; 
+                  catch
+                  disp('its that weird .txt loading error for calcium data???');
+                  end
+              end  
+            end
+
+            delete([loadPath newDataDir(1).name]); %delete old calcium data
+            dataFlag = true;                       %flag new data
+
+            try
+            ExpStruct.dFF(i,:)=dff;
+            catch
+            ExpStruct.dFF(i,:)=dff';
+            end
+            clear dff;
+            disp('LOADED CALCIUM DATA');
         end
-        
-        
-        load([loadPath newDataDir(1).name]);  %load new calcium data
-        delete([loadPath newDataDir(1).name]); %delete old calcium data
-        dataFlag = true;                       %flag new data
-        
-        try
-        ExpStruct.dFF(i,:)=dff;
-        catch
-                ExpStruct.dFF(i,:)=dff';
-        end
-        clear dff;
-        disp('LOADED CALCIUM DATA');
     end
 end
 %analyze sweeps{thisTrial}(1,:) for analog data, and we'll see about
@@ -97,7 +114,13 @@ ExpStruct.BehaviorOutcomes(i) = indx;
 ExpStruct.dataIn{i}=dataIn;
 %% science happens here
 if ExpStruct.getSIdata;
+    if ~debugSLM || i==1
 [neuronsToShoot StimParams ExpStruct]=chooseStimuli(ExpStruct,i);
+    else
+        neuronsToShoot = randi(3);
+        
+    StimParams=ExpStruct.stimParams{i-1};
+    end
 %disp('close loop analysis function completed.  We have stimulation parameters');
 else
     debugFlag = 1;
@@ -124,6 +147,7 @@ ExpStruct.neuronsToShoot{i}=neuronsToShoot;
 if ~isnan(neuronsToShoot);  
     if isempty(ExpStruct.DE_list); %if we havent computer holograms yet.
         %new holorequest!
+        if ~debugSLM
         theListofHolos=[];
         for jjv = 1:numel(ExpStruct.targetEnsembles);
             
@@ -133,6 +157,9 @@ if ~isnan(neuronsToShoot);
             
         end
         theListofHolos(end)=[];  %delete the comma
+        else debugSLM
+            theListofHolos = '[1:200],[201:400],[50:250]'
+        end
         rois=HI3Parse(theListofHolos);
         [listOfPossibleHolos convertedSequence] = convertSequence(rois);
         
@@ -145,13 +172,12 @@ if ~isnan(neuronsToShoot);
         
         disp('Sent New Hologram Command - waiting on DE list');
         
-        while isempty(DE_list);
-            DE_list=msrecv(HoloSocket);
+        while isempty(ExpStruct.DE_list);
+           ExpStruct.DE_list=msrecv(HoloSocket);
         end
         disp('Got DE_list, now making triggers');
         
         
-        ExpStruct.DE_list=DE_list;
     end
     
     %% Maker Stimulation Triggers
@@ -165,27 +191,32 @@ if ~isnan(neuronsToShoot);
     NextHoloOutput = LaserOutput; % zeros
   
     % based on next stimulus and stimulus history, make Laser EOM and holo triggers for stimulus
+    if ~debugSLM
     for j=1:numel(holoRequest.Sequence{1});
-        PowerRequest = (StimParams.avgPower*numel(targets))/DE_list(thisTarget);
+        PowerRequest = (StimParams.avgPower*numel(targets))/ ExpStruct.DE_list(thisTarget);
         Volt = function_EOMVoltage(LaserPower.EOMVoltage,LaserPower.PowerOutputTF,PowerRequest);
         Q=makepulseoutputs(StimParams.startTime,StimParams.pulseNumber,StimParams.pulseDuration,Volt,StimParams.stimFreq,20000,size(LaserOutput,1)/20000);
         LaserOutput=LaserOutput+Q;
         StimParams.startTime=StimParams.startTime+StimParams.unitLength;
     end
-    
-    NextHoloOutput=makepulseoutputs(StimParams.startTime-10,neuronsToShoot,2,1,50,20000,size(LaserOutput,1)/20000);
-    
-
-    
     LaserOutput(LaserOutput==0)=eomOffset;  %apply offset
+    end
+    
+    NextHoloOutput=makepulseoutputs(StimParams.startTime-50,2,10,1,1,20000,size(LaserOutput,1)/20000);
+    
+    disp('gonna fire next trial');
+    
+    if debugSLM
+        LaserOutput = makepulseoutputs(StimParams.startTime,1,300,1.5,1,20000,size(LaserOutput,1)/20000);
+    end
     OutputSignal(:,1) = LaserOutput;
     OutputSignal(:,4) =  NextHoloOutput;
+    mssend(HoloSocket, neuronsToShoot);
 else
     %if neuronstoShoot is nan, send nothing on the stim laser
     LaserOutput=zeros(size(defaultOutputSignal,1),1);
     LaserOutput(LaserOutput==0)=eomOffset;  %apply offset
     OutputSignal(:,1) = LaserOutput;
-    ExpStruct.DE{i}=[];
 end
 
 toc

@@ -234,7 +234,7 @@ switch sensitivity;
     
     case 'mid'
     %choose neurons that best discriminate between a min stimulus and zero
-    goTrials  = find(stimData == B(round(numel(B))/2));
+    goTrials  = find(stimData == B(round(numel(B)/2)));
    
         
 end
