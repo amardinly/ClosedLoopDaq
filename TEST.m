@@ -1,9 +1,9 @@
 clear
 clc
-load('X:\holography\Data\Alan\180622_C.mat')
+load('/mnt/excitation/holography/Data/Alan/180723_C.mat')
 ExpStruct2 =[];
 
-ExpStruct2.ensembleSelectParams.stimFlag ={'stim','nonSelective'}; %'catch'
+ExpStruct2.ensembleSelectParams.stimFlag ={'nonSelective', 'stim'}; %'catch'
 ExpStruct2.ensembleSelectParams.threshold=.8;
 ExpStruct2.ensembleSelectParams.minthreshold=.35;
 ExpStruct2.ensembleSelectParams.maxCells=40;

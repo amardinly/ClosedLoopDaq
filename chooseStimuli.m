@@ -281,30 +281,28 @@ end
 
 %sort AUC to get the ranked indexes and compute each ensemble
 [trash AUCIndx] = sort(AUC,'descend');
+flag = ExpStruct.ensembleSelectParams.stimFlag
+for flagIdx = 1:numel(flag)
+    aflag = flag{flagIdx};
+    switch aflag
+        case 'stim'
+              aTargetEnsemble = AUCIndx(1:maxCells);
+              aTargetEnsemble(AUC(aTargetEnsemble)<threshold)=[];
+    %         aTargetEnsemble = find(AUC>=prctile(AUC,threshold));
+         case 'catch'
+    %         aTargetEnsemble = find(AUC<=prctile(AUC,100-threshold));
+              aTargetEnsemble = AUCIndx(end-maxCells:end);
+              aTargetEnsemble(AUC(aTargetEnsemble)>minthreshold)=[];
+         case 'nonSelective'
+              AA=abs(AUC-.5);
+              [AA sortIndx]=sort(AA,'ascend');
+              aTargetEnsemble = sortIndx(1:maxCells);
+              aTargetEnsemble(AUC(aTargetEnsemble)>.6)=[];
+              aTargetEnsemble(AUC(aTargetEnsemble)<.4)=[];
+    %         aTargetEnsemble = intersect(find(AUC>=prctile(AUC,45)),find(AUC<=prctile(AUC,55)));
+    end
 
-% switch flag
-%     case 'stim'
-          targetEnsemble_stim = AUCIndx(1:maxCells);
-          targetEnsemble_stim(AUC(targetEnsemble_stim)<threshold)=[];
-%         targetEnsemble = find(AUC>=prctile(AUC,threshold));
-%     case 'catch'
-%         targetEnsemble = find(AUC<=prctile(AUC,100-threshold));
-          targetEnsemble_catch = AUCIndx(end-maxCells:end);
-          targetEnsemble_catch(AUC(targetEnsemble_catch)>minthreshold)=[];
-%     case 'nonSelective'
-          AA=abs(AUC-.5);
-          [AA sortIndx]=sort(AA,'ascend');
-          targetEnsemble_nonSelective = sortIndx(1:maxCells);
-          targetEnsemble_nonSelective(AUC(targetEnsemble_nonSelective)>.6)=[];
-          targetEnsemble_nonSelective(AUC(targetEnsemble_nonSelective)<.4)=[];
-%         targetEnsemble = intersect(find(AUC>=prctile(AUC,45)),find(AUC<=prctile(AUC,55)));
-   
-
-   targetEnsemble{1}=targetEnsemble_stim;
-   targetEnsemble{2}=targetEnsemble_catch;
-   targetEnsemble{3}=targetEnsemble_nonSelective;
-end
-
+   targetEnsemble{flagIdx} = aTargetEnsemble;
 end
 
 
