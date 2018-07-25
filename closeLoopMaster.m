@@ -4,7 +4,7 @@ persistent holoRequest LaserPower
 tic
 
 debugFlag = 0;
-debugSLM = 1;
+debugSLM = 0;
 
 
 %remove DE
@@ -12,7 +12,7 @@ debugSLM = 1;
 OutputSignal=defaultOutputSignal;
 
 %load HoloRequest once, on the first  run
-if isempty(holoRequest);
+if isempty(holoRequest) && ExpStruct.getSIdata;
     loc=FrankenScopeRigFile;
     load([loc.HoloRequest 'holoRequest.mat'],'holoRequest');
     load(loc.PowerCalib,'LaserPower');
@@ -30,7 +30,7 @@ newDataDir = dir([loadPath '*mat']);
 
 if ExpStruct.getSIdata;
     if debugSLM == 1
-        ExpStruct.dFF(i,:) = randi(300, 1, 400);
+        ExpStruct.dFF(i,:) = randi(300, 1, 10);
     else
         if i == 1;
 
@@ -99,6 +99,7 @@ nextTrialStimData = round((mean(dataIn(100:1000,1))-offset) * 78);
 
 ExpStruct.StimulusData(i) = ExpStruct.StimVoltages(indx);
 
+
 %magnet stim value ON NEXT STIMULUS
 % ExpStruct.StimulusData(i) = nextTrialStimData;
 
@@ -109,7 +110,7 @@ outcomes = [0 64 191 255];
 
 ExpStruct.BehaviorOutcomes(i) = indx;
 %disp(['last trial was a type ' num2str(indx)]);
-%disp(['next trial the stim will be ' num2str(nextTrialStimData)]);
+disp(['next trial the stim will be ' num2str(nextTrialStimData)]);
 
 ExpStruct.dataIn{i}=dataIn;
 %% science happens here
@@ -148,17 +149,17 @@ if ~isnan(neuronsToShoot);
     if isempty(ExpStruct.DE_list); %if we havent computer holograms yet.
         %new holorequest!
         if ~debugSLM
-        theListofHolos=[];
-        for jjv = 1:numel(ExpStruct.targetEnsembles);
-            
-            theListofHolosA = num2str(ExpStruct.targetEnsembles{jjv}); %change to string
-            theListofHolos = [theListofHolos '[' theListofHolosA '],'];
-            
-            
-        end
-        theListofHolos(end)=[];  %delete the comma
+            theListofHolos=[];
+            for jjv = 1:numel(ExpStruct.targetEnsembles);
+
+                theListofHolosA = num2str(ExpStruct.targetEnsembles{jjv}); %change to string
+                theListofHolos = [theListofHolos '[' theListofHolosA '],'];
+
+
+            end
+            theListofHolos(end)=[];  %delete the comma
         else debugSLM
-            theListofHolos = '[1:200],[201:400],[50:250]'
+            theListofHolos = '[1:5],[6:10],[4:8]'
         end
         rois=HI3Parse(theListofHolos);
         [listOfPossibleHolos convertedSequence] = convertSequence(rois);
@@ -192,25 +193,32 @@ if ~isnan(neuronsToShoot);
   
     % based on next stimulus and stimulus history, make Laser EOM and holo triggers for stimulus
     if ~debugSLM
-    for j=1:numel(holoRequest.Sequence{1});
-        PowerRequest = (StimParams.avgPower*numel(targets))/ ExpStruct.DE_list(thisTarget);
-        Volt = function_EOMVoltage(LaserPower.EOMVoltage,LaserPower.PowerOutputTF,PowerRequest);
-        Q=makepulseoutputs(StimParams.startTime,StimParams.pulseNumber,StimParams.pulseDuration,Volt,StimParams.stimFreq,20000,size(LaserOutput,1)/20000);
-        LaserOutput=LaserOutput+Q;
-        StimParams.startTime=StimParams.startTime+StimParams.unitLength;
-    end
-    LaserOutput(LaserOutput==0)=eomOffset;  %apply offset
+%         for j=1:numel(holoRequest.Sequence{1});
+            PowerRequest = (StimParams.avgPower*numel(targets))/ ExpStruct.DE_list(thisTarget);
+            Volt = function_EOMVoltage(LaserPower.EOMVoltage,LaserPower.PowerOutputTF,PowerRequest);
+            LaserOutput=makepulseoutputs(StimParams.startTime,StimParams.pulseNumber,StimParams.pulseDuration,Volt,StimParams.stimFreq,20000,size(LaserOutput,1)/20000);
+%             LaserOutput=LaserOutput+Q;
+%             StimParams.startTime=StimParams.startTime+StimParams.unitLength;
+%         end
+             LaserOutput(LaserOutput==0)=eomOffset;  %apply offset
+    else
+        LaserOutput = makepulseoutputs(StimParams.startTime,1,300,1.5,1,20000,size(LaserOutput,1)/20000);
     end
     
     NextHoloOutput=makepulseoutputs(StimParams.startTime-50,2,10,1,1,20000,size(LaserOutput,1)/20000);
     
-    disp('gonna fire next trial');
+    disp([num2str(neuronsToShoot) ' gonna fire next trial']);
     
-    if debugSLM
-        LaserOutput = makepulseoutputs(StimParams.startTime,1,300,1.5,1,20000,size(LaserOutput,1)/20000);
-    end
     OutputSignal(:,1) = LaserOutput;
     OutputSignal(:,4) =  NextHoloOutput;
+    
+    
+    invar=[];
+    while ~strcmp(invar,'C');
+       invar = msrecv(HoloSocket);
+    end
+    disp('recieved handshake from SLM ');
+    
     mssend(HoloSocket, neuronsToShoot);
 else
     %if neuronstoShoot is nan, send nothing on the stim laser

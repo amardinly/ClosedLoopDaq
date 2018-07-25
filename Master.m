@@ -5,20 +5,22 @@ ExpStruct.getSIdata =0;
 ExpStruct.StimVoltages = [0,60,100,130,160,190,220,250];
 
 %the ensembles that we're going to stimulate
-ExpStruct.ensembleSelectParams.stimFlag ={'stim','catch','nonSelective'}; %'stim' 'catch' 'nonSelective'
+ExpStruct.ensembleSelectParams.stimFlag ={'nonSelective'}; %'stim' 'catch' 'nonSelective'
 ExpStruct.ensembleSelectParams.threshold=.8;
 ExpStruct.ensembleSelectParams.minthreshold=.35;
 
+ExpStruct.DE_list = [];  %reset DE list
+
 ExpStruct.ensembleSelectParams.maxCells=40;
-ExpStruct.ensembleSelectParams.sensitivity='max';  %'min','mid'
+ExpStruct.ensembleSelectParams.sensitivity='mix';  %'min','mid','max','mix'
 
 ExpStruct.targeting_Defaults.baseLineSweeps=50;  %sweeps we run before defining ensembles
-ExpStruct.targeting_Defaults.pcnt_manipulation=10;  %PCNT OF ALL TRIALS FOR EACH ENSEMBLE (e.g. 30% x 3 ensembles = OPTO 90% of the time!)
+ExpStruct.targeting_Defaults.pcnt_manipulation=30;  %PCNT OF ALL TRIALS FOR EACH ENSEMBLE (e.g. 30% x 3 ensembles = OPTO 90% of the time!)
         
 ExpStruct.StimParams.pulseDuration= 100; %ms
 ExpStruct.StimParams.stimFreq= 1; %hz
 ExpStruct.StimParams.avgPower = .05; %W  0.05 0.1 0.15 0.2
-ExpStruct.StimParams.unitLength= 200; %ms
+ExpStruct.StimParams.unitLength= 100; %ms
 ExpStruct.StimParams.startTime=100; %ms;
 ExpStruct.StimParams.pulseNumber=1 ;%10 18       
 
@@ -39,9 +41,10 @@ addAnalogInputChannel(s,'Dev3',0,'Voltage');                    %LASER EOM
 addAnalogOutputChannel(s,'Dev3',2,'Voltage');                    %LASER EOM
 addTriggerConnection(s,'External','Dev3/PFI4','StartTrigger');  %trigger connection from Arduino 
 addDigitalChannel(s,'Dev3','Port0/Line0:5','OutputOnly');  
+addDigitalChannel(s,'Dev3','port0/line6','InputOnly');  
 
 s.Rate=20000;
-s.ExternalTriggerTimeout=3000; %basically never time out
+s.ExternalTriggerTimeout=30000000; %basically never time out
 
 %setup readytogo trigger
 k = daq.createSession('ni');
@@ -99,7 +102,7 @@ ExpStruct.outputs{i} = downsample(outputSignal,10);
 
 [ExpStruct outputSignal] = closeLoopMaster(dataIn,ExpStruct,myUDP,HoloSocket,defaultOutputSignal,eomOffset,i);
 
-% displayTriggers(outputSignal,i);
+ %displayTriggers(outputSignal,i);
 
 save([savePath ExperimentName],'ExpStruct');
 

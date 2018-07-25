@@ -236,7 +236,13 @@ switch sensitivity;
     %choose neurons that best discriminate between a min stimulus and zero
     goTrials  = find(stimData == B(round(numel(B)/2)));
    
-        
+    case 'mix'
+     %treat top 4 stimuli values like they're all the same stim and find the neurons that are best generalizers.  
+     % need to analyze an exp to know if this is stu pid, but I think this
+     % should bias us to more senstiive neu rons.  Wnat to do this to
+     % increase power of finding a reasonable ensemble
+    goTrials  = find(stimData >= B(end-3));
+    
 end
 
 
