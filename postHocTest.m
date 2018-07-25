@@ -9,8 +9,8 @@ OutputSignal=OS;
 %load HoloRequest once, on the first  run
 if isempty(holoRequest);
     loc=FrankenScopeRigFile;
-    load(['Z:\holography\FrankenRig\HoloRequest\holoRequest.mat'],'holoRequest');
-    load('Z:\holography\FrankenRig\Calibration Parameters\20X_Objective_Calibration_LaserPower.mat','LaserPower');
+    load(['/mnt/inhibition/holography/FrankenRig/HoloRequest/holoRequest.mat'],'holoRequest');
+    load('/mnt/inhibition/holography/FrankenRig/Calibration Parameters/20X_Objective_Calibration_LaserPower.mat','LaserPower');
 end
 
 ExpStruct2.dFF(i,:)=ExpStruct.dFF(i,:);
