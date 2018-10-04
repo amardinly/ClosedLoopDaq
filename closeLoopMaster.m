@@ -91,26 +91,19 @@ end
 %digital data.  remember to undo the delta from CC
 %assignin('base','dataIn',dataIn)
 
-%2) grab stimulus data
-offset = mean(dataIn(3000:4000,1));
-nextTrialStimData = round((mean(dataIn(100:1000,1))-offset) * 78);
 
-[m indx]= min(abs(ExpStruct.StimVoltages - nextTrialStimData));
+%NEW: grab stimulus data based on digital pin
+%the number of up changes in the first 20k is the index of the stim
+nextTrialStimIdx = length(find(diff(dataIn(1:20000,2))>0));
 
-ExpStruct.StimulusData(i) = ExpStruct.StimVoltages(indx);
+ExpStruct.StimulusData(i) = ExpStruct.StimVoltages(nextTrialStimIdx);
 
+%and the number of up changes in last 20k is the outcome
+outcome = length(find(diff(dataIn(20000:end,2))>0));
+ExpStruct.BehaviorOutcomes(i) = outcome;
 
-%magnet stim value ON NEXT STIMULUS
-% ExpStruct.StimulusData(i) = nextTrialStimData;
-
-%3) grab behavior data
-behOutcome =(mean(dataIn(31500:33400,1)) - offset) * 78;  %magnet stim value ON NEXT STIMULUS
-outcomes = [0 64 191 255];
-[m indx]= min(abs(outcomes - behOutcome));
-
-ExpStruct.BehaviorOutcomes(i) = indx;
 %disp(['last trial was a type ' num2str(indx)]);
-disp(['next trial the stim will be ' num2str(nextTrialStimData)]);
+disp(['next trial the stim will be ' num2str(ExpStruct.StimVoltages(nextTrialStimIdx))]);
 
 ExpStruct.dataIn{i}=dataIn;
 %% science happens here
