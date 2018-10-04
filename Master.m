@@ -2,7 +2,7 @@ clear all; close all force; clc;
 
 useSockets = 0;
 ExpStruct.getSIdata =0;
-ExpStruct.StimVoltages = [0,60,100,130,160,190,220,250];
+ExpStruct.StimVoltages = [0,60,100,190,220,250];
 
 %the ensembles that we're going to stimulate
 ExpStruct.ensembleSelectParams.stimFlag ={'nonSelective'}; %'stim' 'catch' 'nonSelective'
@@ -12,7 +12,7 @@ ExpStruct.ensembleSelectParams.minthreshold=.35;
 ExpStruct.DE_list = [];  %reset DE list
 
 ExpStruct.ensembleSelectParams.maxCells=40;
-ExpStruct.ensembleSelectParams.sensitivity='mix';  %'min','mid','max','mix'
+ExpStruct.ensembleSelectParams.sensitivity='max';  %'min','mid','max','mix'
 
 ExpStruct.targeting_Defaults.baseLineSweeps=50;  %sweeps we run before defining ensembles
 ExpStruct.targeting_Defaults.pcnt_manipulation=30;  %PCNT OF ALL TRIALS FOR EACH ENSEMBLE (e.g. 30% x 3 ensembles = OPTO 90% of the time!)
@@ -37,7 +37,7 @@ addpath(genpath('C:\Users\MOM2\Documents\GitHub\ClosedLoopDaq\'));
 
 %using matlab data acquisition toolbox, set up daq and connection
 s = daq.createSession('ni'); %ni is company name
-addAnalogInputChannel(s,'Dev3',0,'Voltage');                    %LASER EOM
+addAnalogInputChannel(s,'Dev3',0,'Voltage');                    
 addAnalogOutputChannel(s,'Dev3',2,'Voltage');                    %LASER EOM
 addTriggerConnection(s,'External','Dev3/PFI4','StartTrigger');  %trigger connection from Arduino 
 addDigitalChannel(s,'Dev3','Port0/Line0:5','OutputOnly');  
@@ -57,7 +57,7 @@ defaultOutputSignal=function_load_default_Trigger(eomOffset);
 outputSignal = defaultOutputSignal;  %initial output to defaults
 ExpStruct.dFF=[];
 savePath = 'C:\alan\';
-[ ExperimentName ] = autoExptname1(savePath);
+[ ExperimentName ] = autoExptname1(savePath, ExpStruct.mouseID);
 %%
 
 
