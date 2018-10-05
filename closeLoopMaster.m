@@ -21,7 +21,7 @@ end
 
 %send UDP trigger to Camera to save frames and open next file
 fwrite(myUDP,num2str(i+1));
-disp('UDP signal sent to camera');
+%disp('UDP signal sent to camera');
 
 %1) grab calcium data
 loadPath = 'X:\holography\Data\Alan\DataTransferNode\';
@@ -60,10 +60,10 @@ if ExpStruct.getSIdata;
             end
 
             try
-            load([loadPath newDataDir(1).name]);  %load new calcium data
+                load([loadPath newDataDir(1).name]);  %load new calcium data
             catch
               FUCK = 1;
-              while FUCK == 1;
+                while FUCK == 1;
                   pause(0.01);
                   try
                   load([loadPath newDataDir(1).name]);  %load new calcium data

@@ -286,8 +286,8 @@ for n=1:size(ExpStruct.dFF,2);  %for each cell
 end
 
 %sort AUC to get the ranked indexes and compute each ensemble
-[trash AUCIndx] = sort(AUC,'descend');
-flag = ExpStruct.ensembleSelectParams.stimFlag
+[~, AUCIndx] = sort(AUC,'descend');
+flag = ExpStruct.ensembleSelectParams.stimFlag;
 for flagIdx = 1:numel(flag)
     aflag = flag{flagIdx};
     switch aflag
@@ -307,7 +307,7 @@ for flagIdx = 1:numel(flag)
               aTargetEnsemble(AUC(aTargetEnsemble)<.4)=[];
     %         aTargetEnsemble = intersect(find(AUC>=prctile(AUC,45)),find(AUC<=prctile(AUC,55)));
     end
-
+   disp(['Chose ensemble ' num2str(flagIdx) ', ' aflag ' with ' num2str(length(aTargetEnsemble)) ' neurons']);
    targetEnsemble{flagIdx} = aTargetEnsemble;
 end
 

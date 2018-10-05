@@ -1,17 +1,17 @@
 clear all; close all force; clc;
 
-useSockets = 0;
-ExpStruct.getSIdata =0;
-ExpStruct.StimVoltages = [0,60,100,190,220,250];
+useSockets = 1;
+ExpStruct.getSIdata =1;
+ExpStruct.StimVoltages = [0,85,126,168,210,250];
 
 %the ensembles that we're going to stimulate
-ExpStruct.ensembleSelectParams.stimFlag ={'nonSelective'}; %'stim' 'catch' 'nonSelective'
-ExpStruct.ensembleSelectParams.threshold=.8;
-ExpStruct.ensembleSelectParams.minthreshold=.35;
+ExpStruct.ensembleSelectParams.stimFlag ={'stim'}; %'stim' 'catch' 'nonSelective'
+ExpStruct.ensembleSelectParams.threshold=.8; %this is for stim selective neurons, must be greater than this
+ExpStruct.ensembleSelectParams.minthreshold=.35; %this is for catch selective, must be less than this
 
 ExpStruct.DE_list = [];  %reset DE list
 
-ExpStruct.ensembleSelectParams.maxCells=40;
+ExpStruct.ensembleSelectParams.maxCells=160;
 ExpStruct.ensembleSelectParams.sensitivity='max';  %'min','mid','max','mix'
 
 ExpStruct.targeting_Defaults.baseLineSweeps=50;  %sweeps we run before defining ensembles
@@ -92,12 +92,12 @@ end
 
 %% Run DAQ
 while  i>0; %run forever
-disp(['waiting for trigger to start trial ' num2str(i)]);    
+fprintf(['waiting for trigger to start trial ' num2str(i) '.....']);    
 
 queueOutputData(s,outputSignal);  %get ready to run a sweep
 
 dataIn = s.startForeground;   %run a sweep
-
+fprintf('sweep completed');
 ExpStruct.outputs{i} = downsample(outputSignal,10); 
 
 [ExpStruct outputSignal] = closeLoopMaster(dataIn,ExpStruct,myUDP,HoloSocket,defaultOutputSignal,eomOffset,i);
