@@ -8,7 +8,7 @@ LaserGateTrigger = LaserTrigger;
 NextHolo = LaserTrigger;
 Puffer = LaserTrigger;
 
-CameraTrigger=makepulseoutputs(1,150,.5,1,300,20000,2);
+CameraTrigger=makepulseoutputs(1,450,.5,1,300,20000,2);
 
 NextSeqTrigger1=makepulseoutputs(1,0,20,1,1,20000,2);
 NextSeqTrigger2=makepulseoutputs(1500,1,50,1,10,20000,2);

@@ -58,7 +58,6 @@ if isempty(StimParams);  %on first run...
     makeBlankStim.pulseNumber=0 ;%10 18
     
     targetEnsemble = nan;
-    
 end
 
 %%  Check if we're in baseline period
@@ -75,14 +74,30 @@ if i + 1 <= baselineTrials;
     %ensemble is still a nan.  if it's not a cell, we run this code, which
     %will define the target ensembles;
     
-elseif ~iscell(targetEnsemble);   %if we're done with baseline but we haven't defined a target ensemble yet....best do that
+elseif ~iscell(targetEnsemble) && ~ExpStruct.doOnePhoton;   %if we're done with baseline but we haven't defined a target ensemble yet....best do that
     [targetEnsemble AUC] = chooseTargetEnsemble(ExpStruct);   %run the function that determinens ther neurons to shoot
     ExpStruct.AUC = AUC;  %save the online AUC calculation
     ExpStruct.targetEnsembles = targetEnsemble;  %save the target ensembles
+    %display the psychometric curve so far
+    perfPerStim = [];
+    for i=1:length(ExpStruct.StimVoltages)
+        stim = ExpStruct.StimVoltages(i);
+        nhits = length(find(ExpStruct.BehaviorOutcomes(find(ExpStruct.StimulusData(1:end-1)==stim)+1)==4));
+        total = length(find(ExpStruct.StimulusData(1:end-1)==stim));
+        if total>=1
+            perfPerStim(i) = nhits/total;
+        else
+            perfPerStim(i) = -.1;
+        end
+    end
+    plot(ExpStruct.StimVoltages, perfPerStim);
+elseif ExpStruct.doOnePhoton
+    targetEnsemble = {[1]};
+    AUC = [1 2 3 4];
+    ExpStruct.manipulationLog(i+1) = 0;
 end
 %% decide if we're shooting this trial
 if i + 1 > baselineTrials;  %if we're out of the basleine period
-
     %I think I fixed the off by one error here.  Difficulty is that stimulus
     %data is telling me whats happening on the NEXT
     nextStimValue = ExpStruct.StimulusData(i);  %get stim value for nex trial
@@ -290,6 +305,7 @@ end
 flag = ExpStruct.ensembleSelectParams.stimFlag;
 for flagIdx = 1:numel(flag)
     aflag = flag{flagIdx};
+    maxCells = min([maxCells, length(AUCIndx)]);
     switch aflag
         case 'stim'
               aTargetEnsemble = AUCIndx(1:maxCells);

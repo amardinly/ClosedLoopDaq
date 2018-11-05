@@ -21,7 +21,7 @@ end
 
 %send UDP trigger to Camera to save frames and open next file
 fwrite(myUDP,num2str(i+1));
-%disp('UDP signal sent to camera');
+disp('UDP signal sent to camera');
 
 %1) grab calcium data
 loadPath = 'X:\holography\Data\Alan\DataTransferNode\';
@@ -60,10 +60,10 @@ if ExpStruct.getSIdata;
             end
 
             try
-                load([loadPath newDataDir(1).name]);  %load new calcium data
+            load([loadPath newDataDir(1).name]);  %load new calcium data
             catch
               FUCK = 1;
-                while FUCK == 1;
+              while FUCK == 1;
                   pause(0.01);
                   try
                   load([loadPath newDataDir(1).name]);  %load new calcium data
@@ -102,14 +102,6 @@ ExpStruct.StimulusData(i) = ExpStruct.StimVoltages(nextTrialStimIdx);
 outcome = length(find(diff(dataIn(20000:end,2))>0));
 ExpStruct.BehaviorOutcomes(i) = outcome;
 
-%get the stim on and off times
-stim_on = find(diff(dataIn(:,3))==1);
-stim_off = find(diff(dataIn(:,3))==-1);
-if isempty(stim_on)
-    stim_on = 0;
-    stim_off = 0;
-end
-ExpStruct.StimTimes(i,:) = [stim_on stim_off];
 %disp(['last trial was a type ' num2str(indx)]);
 disp(['next trial the stim will be ' num2str(ExpStruct.StimVoltages(nextTrialStimIdx))]);
 
@@ -117,70 +109,17 @@ ExpStruct.dataIn{i}=dataIn;
 %% science happens here
 if ExpStruct.getSIdata;
     if ~debugSLM || i==1
-        [neuronsToShoot StimParams ExpStruct]=chooseStimuli(ExpStruct,i);
+[neuronsToShoot StimParams ExpStruct]=chooseStimuli(ExpStruct,i);
     else
         neuronsToShoot = randi(3);
         
     StimParams=ExpStruct.stimParams{i-1};
     end
-elseif ExpStruct.doOnePhoton
-     %run neurons to shoot, but set baseline trials to 0 and just start
-     %with stimming
-     [neuronsToShoot StimParams ExpStruct]=chooseStimuli(ExpStruct,i);
-     
 %disp('close loop analysis function completed.  We have stimulation parameters');
 else
     debugFlag = 1;
 end
-if ExpStruct.doOnePhoton && i>40
-    figure(1) 
-perfPerStimLight = [];
-perfPerStim = [];
 
-    for j=1:length(ExpStruct.StimVoltages)
-        stim = ExpStruct.StimVoltages(j);
-        manLog = ExpStruct.manipulationLog; manLog(end) = [];
-        lightBehOut = ExpStruct.BehaviorOutcomes(find(manLog==1));
-        noLightBehOut = ExpStruct.BehaviorOutcomes(find(manLog==0));
-        %change FA to be same as hit
-        lightBehOut(find(lightBehOut==1))=4;
-        noLightBehOut(find(noLightBehOut==1))=4;
-        stimDat = [nan ExpStruct.StimulusData];
-        stimDat(end) = [];
-        lightStim = stimDat(find(manLog==1));
-        noLightStim = stimDat(find(manLog==0));
-        nhitsLight = length(find(lightBehOut(find(lightStim==stim))==4));
-        totalLight = length(find(lightStim==stim));
-        nhits = length(find(noLightBehOut(find(noLightStim==stim))==4));
-        total = length(find(noLightStim==stim));
-        if total>=1
-            perfPerStim(j) = nhits/total;
-        else
-            perfPerStim(j) = -.1;
-        end
-        if totalLight>=1
-            perfPerStimLight(j) = nhitsLight/totalLight;
-        else
-            perfPerStimLight(j) = -.1;
-        end
-    end  
-    plot(ExpStruct.StimVoltages, perfPerStim, 'ko-'); hold on;
-    plot(ExpStruct.StimVoltages, perfPerStimLight, 'ro-'); hold off;
-elseif i > 10
-perfPerStim = [];
-    for j=1:length(ExpStruct.StimVoltages)
-        stim = ExpStruct.StimVoltages(j);
-        nhits = length(find(ExpStruct.BehaviorOutcomes(find(ExpStruct.StimulusData(1:end-1)==stim)+1)==4));
-        total = length(find(ExpStruct.StimulusData(1:end-1)==stim));
-        if total>=1
-            perfPerStim(j) = nhits/total;
-        else
-            perfPerStim(j) = -.1;
-        end
-    end
-    plot(ExpStruct.StimVoltages, perfPerStim,'ko-');
-
-end
 %debug only
 if debugFlag;
     neuronsToShoot =nan;  %
@@ -192,14 +131,14 @@ if debugFlag;
     StimParams.pulseNumber=6 ;%10 18
     DE_list = [ 1 1 1 1 1 1 1];
 end;
-
+%
 
 ExpStruct.stimParams{i}=StimParams;
 ExpStruct.neuronsToShoot{i}=neuronsToShoot;
 
 
 %if we're going to make new holograms
-if ~isnan(neuronsToShoot) && ~ExpStruct.doOnePhoton;
+if ~isnan(neuronsToShoot);  
     if isempty(ExpStruct.DE_list); %if we havent computer holograms yet.
         %new holorequest!
         if ~debugSLM
@@ -228,7 +167,7 @@ if ~isnan(neuronsToShoot) && ~ExpStruct.doOnePhoton;
         disp('Sent New Hologram Command - waiting on DE list');
         
         while isempty(ExpStruct.DE_list);
-           ExpStruct.DE_list=msrecv(HoloSocket,.5);
+           ExpStruct.DE_list=msrecv(HoloSocket);
         end
         disp('Got DE_list, now making triggers');
         
@@ -274,19 +213,12 @@ if ~isnan(neuronsToShoot) && ~ExpStruct.doOnePhoton;
     disp('recieved handshake from SLM ');
     
     mssend(HoloSocket, neuronsToShoot);
-elseif  ~isnan(neuronsToShoot) && ExpStruct.doOnePhoton;
-    LaserOutput=zeros(size(defaultOutputSignal,1),1);
-    Volt = ExpStruct.onePhotonVolt;
-    LaserOutput=makepulseoutputs(StimParams.startTime,StimParams.pulseNumber,StimParams.pulseDuration,Volt,StimParams.stimFreq,20000,size(LaserOutput,1)/20000);
-    OutputSignal(:,1) = LaserOutput;
-    disp('going to one-photon stim');
 else
     %if neuronstoShoot is nan, send nothing on the stim laser
     LaserOutput=zeros(size(defaultOutputSignal,1),1);
     LaserOutput(LaserOutput==0)=eomOffset;  %apply offset
     OutputSignal(:,1) = LaserOutput;
 end
-
 
 toc
 fprintf('\n')
