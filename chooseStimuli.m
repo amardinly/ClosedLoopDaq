@@ -97,7 +97,24 @@ elseif ExpStruct.doOnePhoton
     ExpStruct.manipulationLog(i+1) = 0;
 end
 %% decide if we're shooting this trial
-if i + 1 > baselineTrials;  %if we're out of the basleine period
+%if in modified peterson, just give it a percent manip chance if the stim
+%strength is one
+if i + 1 > baselineTrials && ExpStruct.modifiedPeterson
+    if (ExpStruct.StimulusData(i)==1)
+        shoot = randi(100) < ExpStruct.targeting_Defaults.pcnt_manipulation;
+    else
+        shoot = 0;
+    end
+    if shoot
+        neuronsToShoot = 1;
+        ExpStruct.manipulationLog(i+1) = 1;
+        StimParamsOut=StimParams;
+    else
+        neuronsToShoot = nan;
+        ExpStruct.manipulationLog(i+1) = 0;
+        StimParamsOut=makeBlankStim;   
+    end
+elseif i + 1 > baselineTrials;  %if we're out of the basleine period
     %I think I fixed the off by one error here.  Difficulty is that stimulus
     %data is telling me whats happening on the NEXT
     nextStimValue = ExpStruct.StimulusData(i);  %get stim value for nex trial
@@ -220,6 +237,8 @@ if ~isfield(ExpStruct,'ensembleSelectParams');
 
     maxCells = 40;
     sensitivity = 'max';
+    max_ensemble_stim = 0;
+    n_ensembles = 1;
 else
     %if they are there, load them....
     sensitivity=ExpStruct.ensembleSelectParams.sensitivity;
@@ -227,7 +246,25 @@ else
     threshold=ExpStruct.ensembleSelectParams.threshold;
     maxCells=ExpStruct.ensembleSelectParams.maxCells;  
     minthreshold=ExpStruct.ensembleSelectParams.minthreshold;
+    max_ensemble_stim = ExpStruct.ensembleSelectParams.max_ensemble_stim;
+    n_ensembles = ExpStruct.ensembleSelectParams.n_ensembles;
 end
+%if max_ensemble_stim
+%    n_neurons = numel(ExpStruct.holoRequest.rois);
+%    if n_neurons/maxCells < n_ensembles
+%        n_per_holo = floor(n_neurons/n_ensembles);
+%    else
+%        n_per_holo = maxCells;
+%    end
+%    ensembles = {}
+%    for i=0:(n_ensembles-1)
+%         ensembles{i+1} = [n_per_holo*i+1:n_per_holo*(i+1)];
+
+%    end
+%    targetEnsemble = ensembles;
+%    AUC=[];
+%    return
+%end
 
 %adjust stim data to equal dff
 stimData=[nan ExpStruct.StimulusData];
@@ -305,26 +342,71 @@ end
 flag = ExpStruct.ensembleSelectParams.stimFlag;
 for flagIdx = 1:numel(flag)
     aflag = flag{flagIdx};
-    maxCells = min([maxCells, length(AUCIndx)]);
+    totCells = min([maxCells*n_ensembles, length(AUCIndx)]);
     switch aflag
+   
         case 'stim'
-              aTargetEnsemble = AUCIndx(1:maxCells);
+              aTargetEnsemble = AUCIndx(1:totCells);
               aTargetEnsemble(AUC(aTargetEnsemble)<threshold)=[];
+              if n_ensembles > 1
+                  n_neurons = numel(aTargetEnsemble);
+                    if n_neurons/maxCells < n_ensembles
+                        n_per_holo = floor(n_neurons/n_ensembles);
+                    else
+                        n_per_holo = maxCells;
+                    end
+                    ensembles = {}
+                    for i=0:(n_ensembles-1)
+                         ensembles{i+1} = aTargetEnsemble(n_per_holo*i+1:n_per_holo*(i+1));
+                    end
+              else
+                  ensembles = {}; ensembles{1} = aTargetEnsemble;
+              end
     %         aTargetEnsemble = find(AUC>=prctile(AUC,threshold));
          case 'catch'
     %         aTargetEnsemble = find(AUC<=prctile(AUC,100-threshold));
-              aTargetEnsemble = AUCIndx(end-maxCells:end);
+              
+              aTargetEnsemble = AUCIndx(end-totCells:end);
               aTargetEnsemble(AUC(aTargetEnsemble)>minthreshold)=[];
+              if n_ensembles > 1
+                  n_neurons = numel(aTargetEnsemble);
+                    if n_neurons/maxCells < n_ensembles
+                        n_per_holo = floor(n_neurons/n_ensembles);
+                    else
+                        n_per_holo = maxCells;
+                    end
+                    ensembles = {}
+                    for i=0:(n_ensembles-1)
+                         ensembles{i+1} = aTargetEnsemble(n_per_holo*i+1:n_per_holo*(i+1));
+                    end
+              else
+                  ensembles = {}; ensembles{1} = aTargetEnsemble;
+              end
          case 'nonSelective'
               AA=abs(AUC-.5);
               [AA sortIndx]=sort(AA,'ascend');
-              aTargetEnsemble = sortIndx(1:maxCells);
+              aTargetEnsemble = sortIndx(1:totCells);
               aTargetEnsemble(AUC(aTargetEnsemble)>.6)=[];
               aTargetEnsemble(AUC(aTargetEnsemble)<.4)=[];
+              if n_ensembles > 1
+                  n_neurons = numel(aTargetEnsemble);
+                    if n_neurons/maxCells < n_ensembles
+                        n_per_holo = floor(n_neurons/n_ensembles);
+                    else
+                        n_per_holo = maxCells;
+                    end
+                    ensembles = {}
+                    for i=0:(n_ensembles-1)
+                         ensembles{i+1} = aTargetEnsemble(n_per_holo*i+1:n_per_holo*(i+1));
+                    end
+              else
+                  ensembles = {}; ensembles{1} = aTargetEnsemble;
+              end
     %         aTargetEnsemble = intersect(find(AUC>=prctile(AUC,45)),find(AUC<=prctile(AUC,55)));
     end
    disp(['Chose ensemble ' num2str(flagIdx) ', ' aflag ' with ' num2str(length(aTargetEnsemble)) ' neurons']);
-   targetEnsemble{flagIdx} = aTargetEnsemble;
+   disp(['subdivided into ' length(ensembles) ' ensembles with ' num2str(length(ensembles{1})) ' cells']);
+   targetEnsemble{flagIdx} = ensembles;
 end
 
 

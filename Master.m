@@ -1,6 +1,7 @@
 clear all; close all force; clc;
 
 ExpStruct.doOnePhoton = 1;
+ExpStruct.modifiedPeterson = 1;
 useSockets = 0;
 ExpStruct.getSIdata =0;
 ExpStruct.StimVoltages = [0,100,138,175,213,250];
@@ -9,6 +10,9 @@ ExpStruct.StimVoltages = [0,100,138,175,213,250];
 ExpStruct.ensembleSelectParams.stimFlag ={'stim'}; %'stim' 'catch' 'nonSelective'
 ExpStruct.ensembleSelectParams.threshold=.3; %this is for stim selective neurons, must be greater than this
 ExpStruct.ensembleSelectParams.minthreshold=.35; %this is for catch selective, must be less than this
+ExpStruct.ensembleSelectParams.max_ensemble_stim = 1; %whether or not to just shoot as many neurons as we can
+ExpStruct.ensembleSelectParams.n_ensembles = 4; %if doing max ensemble stim, how many ensembles to pick
+
 
 ExpStruct.DE_list = [];  %reset DE list
 
@@ -16,8 +20,8 @@ ExpStruct.ensembleSelectParams.maxCells=40;
 ExpStruct.ensembleSelectParams.sensitivity='max';  %'min','mid','max','mix'
 
 ExpStruct.targeting_Defaults.baseLineSweeps=50;  %sweeps we run before defining ensembles
-ExpStruct.targeting_Defaults.pcnt_manipulation=30;  %PCNT OF ALL TRIALS FOR EACH ENSEMBLE (e.g. 30% x 3 ensembles = OPTO 90% of the time!)
-        
+ExpStruct.targeting_Defaults.pcnt_manipulation=80;  %PCNT OF ALL TRIALS FOR EACH ENSEMBLE (e.g. 30% x 3 ensembles = OPTO 90% of the time!)
+
 ExpStruct.StimParams.pulseDuration= 8; %ms
 ExpStruct.StimParams.stimFreq= 30; %hz
 ExpStruct.StimParams.avgPower = .1; %W  0.05 0.1 0.15 0.2

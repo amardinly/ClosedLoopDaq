@@ -204,23 +204,37 @@ if ~isnan(neuronsToShoot) && ~ExpStruct.doOnePhoton;
         %new holorequest!
         if ~debugSLM
             theListofHolos=[];
+            sequence = {};
+            count_ensembles = 0;
             for jjv = 1:numel(ExpStruct.targetEnsembles);
-
-                theListofHolosA = num2str(ExpStruct.targetEnsembles{jjv}); %change to string
-                theListofHolos = [theListofHolos '[' theListofHolosA '],'];
-
-
+                %so we have to extract n_ensembles from each ensemble and
+                %add it to list of holos
+                %also it should always have n_ensembles neurons
+                %assert(length(ExpStruct.targetEnsembles{jjv} == ensembleSelectParams.n_ensembles));
+                aseq = [];
+                for i_ensemb = 1:length(ExpStruct.targetEnsembles{jjv})
+                    theListofHolosA = num2str(ExpStruct.targetEnsembles{jjv}{i_ensemb}); %change to string
+                    theListofHolos = [theListofHolos '[' theListofHolosA '],'];
+                    count_ensembles = count_ensembles+1;
+                    aseq = [aseq, count_ensembles];
+                end
+                sequence{jjv} = aseq;
             end
             theListofHolos(end)=[];  %delete the comma
         else debugSLM
             theListofHolos = '[1:5],[6:10],[4:8]'
         end
+        %CONCERN: we don't want to adjust the sequence, because we want to
+        %stay in order, since the order is meaningful
         rois=HI3Parse(theListofHolos);
-        [listOfPossibleHolos convertedSequence] = convertSequence(rois);
+        %[listOfPossibleHolos convertedSequence] = convertSequence(rois);
         
         
-        holoRequest.rois     =  listOfPossibleHolos;
-        holoRequest.Sequence = {convertedSequence};
+        holoRequest.rois     = rois;% listOfPossibleHolos;
+        
+        %or actually make each set its own sequence! Revolutionary.
+        
+        holoRequest.Sequence = sequence;%{1:length(listOfPossibleHolos)};
         
         %send new holorequest to hologram computer
         mssend(HoloSocket,holoRequest);
@@ -237,17 +251,20 @@ if ~isnan(neuronsToShoot) && ~ExpStruct.doOnePhoton;
     
     %% Maker Stimulation Triggers
     
-    thisTarget=holoRequest.Sequence{1}(neuronsToShoot);
-        
-    targets=holoRequest.rois{thisTarget};
-    
+    %now for multi ensemble it needs to be multiple powers
+    %thisTarget=holoRequest.Sequence{1}(neuronsToShoot);
+    theseTargets=holoRequest.Sequence{neuronsToShoot};
+    %what is this for?
+    %targets=holoRequest.rois{thisTarget};
+    %HAYLEY: THIS IS WHERE YOU LEFT OFF.
+    n_targets_list = {holoRequest.rois{theseTargets}};
     LaserOutput=zeros(size(defaultOutputSignal,1),1);
     
     NextHoloOutput = LaserOutput; % zeros
   
     % based on next stimulus and stimulus history, make Laser EOM and holo triggers for stimulus
     if ~debugSLM
-%         for j=1:numel(holoRequest.Sequence{1});
+         % for j=1:numel(holoRequest.Sequence{1});
             PowerRequest = (StimParams.avgPower*numel(targets))/ ExpStruct.DE_list(thisTarget);
             Volt = function_EOMVoltage(LaserPower.EOMVoltage,LaserPower.PowerOutputTF,PowerRequest);
             LaserOutput=makepulseoutputs(StimParams.startTime,StimParams.pulseNumber,StimParams.pulseDuration,Volt,StimParams.stimFreq,20000,size(LaserOutput,1)/20000);
@@ -271,7 +288,7 @@ if ~isnan(neuronsToShoot) && ~ExpStruct.doOnePhoton;
     while ~strcmp(invar,'C');
        invar = msrecv(HoloSocket);
     end
-    disp('recieved handshake from SLM ');
+    disp('recieved handshake from SLM');
     
     mssend(HoloSocket, neuronsToShoot);
 elseif  ~isnan(neuronsToShoot) && ExpStruct.doOnePhoton;
